@@ -70,20 +70,18 @@
                  <td id='name' hidden> </td>
                   <td id ='code' hidden></td>
 
+              </tr>
 
-              </tr> <tr>
 <ul id="Countries_Visted">
 
-    <li> </li>
 </ul>
+
               </div>
 
   </body>
 
-  <br>
 
    <script>
-
 
     var img1 =   "<img src="
     var im2 = ">"
@@ -91,6 +89,7 @@
     var quotes = "'"
     var flagimage_pt1 = "https://www.countryflags.io/"
     var flagimage_pt2= "/flat/64.png"
+
 
     // creating mapbox basemap
 
@@ -107,53 +106,18 @@
 
          }).addTo(mapbox);
 
-      // style for vector layers
-
-      var countriesstyle = {
-      "color": '#636363',
-      "weight": 1,
-      "opacity": 7};
-
 
        //loading data with style, click function and listener
 
-        var  layer = new L.GeoJSON.AJAX("{% url 'borders_data' %}",{
+        var  data_layer = new L.GeoJSON.AJAX("{% url 'borders_data' %}",{
 				    style : countriesStyle,
 					onEachFeature : countriesOnEachFeature
 				})
         //listener - adding to map on load
-        layer.on('data:loaded',function(e){layer.addTo(mapbox)
+        data_layer.on('data:loaded',function(e){layer.addTo(mapbox)
          });
 
-       // creating click interaction
-
-     var countriesLayer;
-
-     	function highlightFeature(e){
-				var layer = e.target;
-				layer.setStyle(
-					{
-						weight : 5,
-						color : 'black',
-						fillColor : 'green',
-						fillOpacity : 0.2
-					}
-				);
-				if(!L.Browser.ie && !L.Browser.opera){
-					layer.bringToFront();
-				}
-			}
-
-			function resetHighlight(e){
-				countriesLayer.resetStyle(e.target);
-			}
-
-			function zoomToFeature(e){
-				map.fitBounds(e.target.getBounds());
-			}
-
-
-			function countriesStyle(feature){
+     	function countriesStyle(feature){
 				return {
 					fillColor : 'grey',
 					weight : 2,
@@ -163,8 +127,6 @@
 					fillOpacity : 0.2
 				}
 			}
-
-
 
 			function countriesOnEachFeature(feature, layer){
 				layer.on(
@@ -188,12 +150,9 @@
                           layer.on(
 					{
 
-						click: load_name});
+						click: load_name_flag});
 
-						layer.on(
-					{
 
-						click: load_flag});
 
 						  layer.on(
 					{
@@ -202,55 +161,35 @@
                          }
 
 
-                         layer.on(
-					{
+                    ;
 
-						dblclick: removeElement});
-
+             ///// clearing styling
 
 
 
+             var layer = data_layer
                      function clear (e) {
-            countriesLayer.resetStyle(e.target); field2.parentNode.removeChild(element);
-             }
-
-             function load_name (e) {
-              var field1 =document.getElementById('name');
-                field1.innerHTML= e.target.feature.properties.name;
-
-                var selected_flag_click = field1.innerHTML
-                $('#Countries_Visted').append('<li>'+selected_flag_click+'</li>').disabled = true
-
+            layer.resetStyle(e.target);
 
              }
 
-                function load_flag (e) {
-                var field2 =document.getElementById('code');
-                field2.innerHTML= e.target.feature.properties.iso2;
-
-                var selected_name_click = img1+quotes+flagimage_pt1+field2.innerHTML+flagimage_pt2+quotes+im2
-                $('#Countries_Visted').append('<li>'+selected_name_click+'</li>').disabled = true
-
-                 Countries_Visted.onclick = function() {this.parentNode.removeChild(this);}
-                 Countries_Visted.ondblclick = removeElement
+             ///// adding to clicked countries to countries visted list
 
 
-                 }
+              function load_name_flag (e) {
+             var field1 =document.getElementById('name');
+             field1.innerHTML= e.target.feature.properties.name;
+             var field2 =document.getElementById('code');
+             field2.innerHTML= e.target.feature.properties.iso2;
 
+              var selected_name_search = field1.innerHTML
+              var selected_flag_search = img1+quotes+flagimage_pt1+field2.innerHTML+flagimage_pt2+quotes+im2
+              var selected_features_combine = selected_name_search+selected_flag_search
 
+              $('#Countries_Visted').append('<li>'+selected_features_combine+'</li>').disabled = true
 
+              };
 
-                 function removeElement(elementId) {
-                 element =document.getElementById('code');
-                 field2.parentNode.removeChild(element);
-                 }
-
-
-			$("#addButton").click(function () {
-            $('ul').append('<li>'+selectedVal+'</li>')
-
-
-              });
 
  </script>
 
@@ -263,51 +202,59 @@
 
 	 	<script>
 
+
+
         //pointing search function to map layer
 
 	 	var searchControl = new L.Control.Search({
         container: 'findbox',
-		layer: layer,
+		layer: data_layer,
 		initial: false,
 		collapsed: false,
 		propertyName: 'name',
 		marker: false
 	    });
 
+	    // search box finds layer and adds country name and flag, changes layer symbol to green
+
+	     searchControl.on('search:locationfound', function(e) {
+
+		     var field1 =document.getElementById('name');
+             field1.innerHTML= e.layer.feature.properties.name;
+             var field2 =document.getElementById('code');
+             field2.innerHTML= e.layer.feature.properties.iso2;
+
+              var selected_name_search = field1.innerHTML
+              var selected_flag_search = img1+quotes+flagimage_pt1+field2.innerHTML+flagimage_pt2+quotes+im2
+              var selected_features_combine = selected_name_search+selected_flag_search
 
 
-	searchControl.on('search:locationfound', function(e) {
+             // styles for selected country
 
-		//console.log('search:locationfound', );
-		e.layer.setStyle({fillColor: 'green', color: 'black',fillOpacity: 0.8});
-              var field1 =document.getElementById('name');
-                field1.innerHTML= e.layer.feature.properties.name;
-                var field2 =document.getElementById('code');
-                field2.innerHTML= e.layer.feature.properties.iso2;
 
-                var selected_name_search = field1.innerHTML
-                $('#Countries_Visted').append('<li>'+selected_name_search+'</li>').disabled = true
+		     e.layer.setStyle({fillColor: 'green', color: 'black',fillOpacity: 0.8});
 
-                var selected_flag_search = img1+quotes+flagimage_pt1+field2.innerHTML+flagimage_pt2+quotes+im2
-                $('#Countries_Visted').append('<li>'+selected_flag_search+'</li>').disabled = true
+                /// adding name and flag to countriesvisted list from searchbox select
+
+
+                $('#Countries_Visted').append('<li>'+selected_features_combine+'</li>').disabled = true
+
 	});
 
 
 	;
 
-		$("#addButton").click(function () {
-        $('ul').append('<li>'+selectedVal+'</li>')
-
-        });
-
-
-
 	mapbox.addControl( searchControl );  //inizialize search control
 
-
-
-
-
+	             // function to remove added layers
+                 Countries_Visted.onclick = function remove(e) {
+                 var li = e.target;
+                 var layer = data_layer
+                 var listItems = document.querySelectorAll("li");
+                 var ul = document.getElementById("ul");
+                 li.parentNode.removeChild(li);
+                 layer.resetStyle(e.target);
+                 }
 
 
 
